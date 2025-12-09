@@ -41,14 +41,14 @@ class PanelManager {
       const row = [];
       const m1 = this.modules[i];
       row.push({
-        text: `${m1.name}`,
+        text: m1.name,
         callback_data: `panel_module_${m1.id}`
       });
 
       if (i + 1 < this.modules.length) {
         const m2 = this.modules[i + 1];
         row.push({
-          text: `${m2.name}`,
+          text: m2.name,
           callback_data: `panel_module_${m2.id}`
         });
       }
@@ -90,10 +90,12 @@ class PanelManager {
   }
 
   buildModuleKeyboard(module) {
-    const buttons = module.actions.map(action => [{
-      text: action.name,
-      callback_data: `action_${module.id}_${action.id}`
-    }]));
+    const buttons = module.actions.map(action => {
+      return [{
+        text: action.name,
+        callback_data: `action_${module.id}_${action.id}`
+      }];
+    });
 
     buttons.push([
       { text: '🔙 Voltar', callback_data: 'panel_main' }
