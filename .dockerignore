@@ -1,0 +1,44 @@
+# Dependências
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# Documentação
+*.md
+docs/
+
+# Testes
+test/
+tests/
+*.test.js
+
+# CI/CD
+.github/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# WebApp (não precisa no backend container)
+webapp/
