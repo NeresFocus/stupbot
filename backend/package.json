@@ -1,7 +1,7 @@
 {
   "name": "neres-focus-bot-backend",
-  "version": "1.0.0",
-  "description": "Backend Node.js do Neres Focus Bot (Telegram) - painel, onboarding e sugestões",
+  "version": "2.0.0",
+  "description": "Backend completo do Neres Focus Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -10,13 +10,13 @@
   "author": "Neres Focus",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.5.0",
+    "axios": "^1.6.0",
     "body-parser": "^1.20.2",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "node-telegram-bot-api": "^0.61.0"
+    "node-telegram-bot-api": "^0.64.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.0.1"
   }
 }
