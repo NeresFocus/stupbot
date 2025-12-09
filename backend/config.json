@@ -1,0 +1,147 @@
+{
+  "bot_name": "Neres Focus Bot",
+  "username": "neres_focus_bot",
+  "version": "2.0",
+  "system": {
+    "auto_config": true,
+    "suggestions_engine": "enabled",
+    "logs": true,
+    "analytics": true,
+    "modules_active": 8,
+    "actions_total": 48
+  },
+  "onboarding": {
+    "trigger": "/start",
+    "welcome_message": "👋 Bem-vindo ao Neres Focus Bot! Eu sou seu assistente inteligente para estratégia, conteúdo, automação e otimização de negócios.",
+    "steps": [
+      {
+        "id": "step_welcome",
+        "message": "Para começar, escolha uma opção:",
+        "buttons": [
+          {
+            "text": "📊 Abrir Painel Completo",
+            "callback": "open_panel"
+          },
+          {
+            "text": "🤖 Ativar Sugestões Inteligentes",
+            "callback": "enable_suggestions"
+          },
+          {
+            "text": "⚙️ Configurações",
+            "callback": "open_settings"
+          }
+        ]
+      }
+    ],
+    "auto_continue": true
+  },
+  "panel": {
+    "trigger": "/panel",
+    "title": "📊 Painel Completo — Neres Focus",
+    "modules": [
+      {
+        "id": "leads",
+        "name": "📥 Leads",
+        "actions": [
+          "Novo Lead",
+          "Buscar Lead",
+          "Status de Lead",
+          "Relatório Diário"
+        ]
+      },
+      {
+        "id": "projects",
+        "name": "📁 Projetos",
+        "actions": [
+          "Criar Projeto",
+          "Acompanhar Tarefas",
+          "Ver Progresso",
+          "Checklist de Entrega"
+        ]
+      },
+      {
+        "id": "operations",
+        "name": "⚙️ Operações",
+        "actions": [
+          "Fluxos Internos",
+          "Procedimentos",
+          "Auditoria Automática",
+          "Alertas Operacionais"
+        ]
+      },
+      {
+        "id": "finance",
+        "name": "💰 Financeiro",
+        "actions": [
+          "Resumo Financeiro",
+          "Cadastrar Despesa",
+          "Cadastrar Recebimento",
+          "Relatório Executivo"
+        ]
+      },
+      {
+        "id": "marketing",
+        "name": "📣 Marketing",
+        "actions": [
+          "Criar Conteúdo",
+          "Sugestões Inteligentes de Post",
+          "Análises de Métricas",
+          "Campanhas Rápidas"
+        ]
+      },
+      {
+        "id": "clients",
+        "name": "👥 Clientes",
+        "actions": [
+          "Novo Cliente",
+          "Relatório de Clientes",
+          "Carteira Ativa",
+          "Follow-up Automático"
+        ]
+      },
+      {
+        "id": "docs",
+        "name": "📄 Documentos",
+        "actions": [
+          "Gerar Documento",
+          "Enviar PDF",
+          "Templates Prontos",
+          "Assinatura Digital"
+        ]
+      },
+      {
+        "id": "ai",
+        "name": "🤖 IA Neres Focus",
+        "actions": [
+          "Gerar Análise",
+          "Criar Estratégia",
+          "Otimizar Processo",
+          "Recomendações Automáticas"
+        ]
+      }
+    ]
+  },
+  "commands": {
+    "/start": "Inicia o bot e aciona onboarding",
+    "/panel": "Abre o painel completo",
+    "/ideas": "Gera ideias rápidas",
+    "/help": "Mostra ajuda e comandos",
+    "/enable_suggestions": "Ativa sugestões inteligentes",
+    "/settings": "Abre configurações",
+    "/reset": "Restaura o bot"
+  },
+  "smart_suggestions": {
+    "status": "enabled"
+  },
+  "flows": {
+    "lead_capture": {
+      "trigger": "new_lead"
+    },
+    "content_generation": {
+      "trigger": "create_content"
+    },
+    "auto_config": {
+      "enabled": true
+    }
+  }
+}
