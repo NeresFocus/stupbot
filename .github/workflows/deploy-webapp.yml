@@ -1,0 +1,71 @@
+name: Deploy WebApp to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'webapp/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './webapp'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Notify Backend
+        if: ${{ success() }}
+        run: |
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          WEBAPP_URL="${{ secrets.WEBAPP_PUBLIC_URL }}"
+
+          # Se não houver URL customizada, usa o padrão do GitHub Pages
+          if [ -z "$WEBAPP_URL" ]; then
+            WEBAPP_URL="https://${REPO_OWNER}.github.io/${REPO_NAME}/"
+          fi
+
+          # Envia notificação POST ao backend (somente se BACKEND_NOTIFY_URL estiver configurado)
+          if [ -n "${{ secrets.BACKEND_NOTIFY_URL }}" ]; then
+            curl -X POST "${{ secrets.BACKEND_NOTIFY_URL }}/deploy-hook" \
+              -H "Content-Type: application/json" \
+              -H "X-Deploy-Token: ${{ secrets.BACKEND_NOTIFY_SECRET }}" \
+              -d "{
+                \"event\": \"webapp_deployed\",
+                \"url\": \"${WEBAPP_URL}\",
+                \"ref\": \"${{ github.ref }}\",
+                \"repo\": \"${REPO_OWNER}/${REPO_NAME}\",
+                \"commit\": \"${{ github.sha }}\",
+                \"actor\": \"${{ github.actor }}\",
+                \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+              }" || echo "⚠️ Falha ao notificar backend (não crítico)"
+          else
+            echo "ℹ️ BACKEND_NOTIFY_URL não configurado, pulando notificação"
+          fi
