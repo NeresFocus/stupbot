@@ -1,0 +1,82 @@
+{
+  "modules": [
+    {
+      "id": "leads",
+      "name": "🔹 Leads e Vendas",
+      "number": 1,
+      "actions": [
+        {"id": "novo_lead", "name": "➕ Novo Lead"},
+        {"id": "leads_hoje", "name": "📅 Leads Hoje"},
+        {"id": "funil", "name": "📊 Funil Completo"}
+      ]
+    },
+    {
+      "id": "projetos",
+      "name": "📁 Projetos e Entregas",
+      "number": 2,
+      "actions": [
+        {"id": "criar", "name": "➕ Criar Projeto"},
+        {"id": "entregas_hoje", "name": "🟢 Entregas Hoje"}
+      ]
+    },
+    {
+      "id": "operacoes",
+      "name": "🤖 Operações & Automação",
+      "number": 3,
+      "actions": [
+        {"id": "automacoes", "name": "🔄 Automações"},
+        {"id": "status", "name": "📊 Status"}
+      ]
+    },
+    {
+      "id": "financeiro",
+      "name": "💰 Financeiro",
+      "number": 4,
+      "actions": [
+        {"id": "hoje", "name": "💰 Faturamento Hoje"},
+        {"id": "mensal", "name": "📊 Mensal"}
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "📢 Marketing",
+      "number": 5,
+      "actions": [
+        {"id": "agendados", "name": "🗓 Agendados"},
+        {"id": "roteiro_ia", "name": "✍️ Roteiro IA"}
+      ]
+    },
+    {
+      "id": "clientes",
+      "name": "👤 Clientes Ativos",
+      "number": 6,
+      "actions": [
+        {"id": "lista", "name": "📊 Lista"},
+        {"id": "renovacoes", "name": "🔄 Renovações"}
+      ]
+    },
+    {
+      "id": "documentos",
+      "name": "📑 Documentos",
+      "number": 7,
+      "actions": [
+        {"id": "modelos", "name": "📋 Modelos"},
+        {"id": "sops", "name": "⚙️ SOPs"}
+      ]
+    },
+    {
+      "id": "ia",
+      "name": "🧠 IA & Insights",
+      "number": 8,
+      "actions": [
+        {"id": "diagnostico", "name": "🔍 Diagnóstico"},
+        {"id": "ideias", "name": "💡 Ideias"}
+      ]
+    }
+  ],
+  "settings": {
+    "authorized_users": [],
+    "enable_ia": true,
+    "log_all_actions": true
+  }
+}
