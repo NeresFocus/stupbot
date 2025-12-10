@@ -1,96 +1,181 @@
 /**
- * Roteador de Agentes
- * Identifica qual agente usar baseado no contexto
- */
+ * Agent Router
+ * Automatically loads and routes all agents
+ * Dynamically discovers and manages all AGENTE_XXX modules
+*/
 
-const MessageHandler = require('../utils/messageHandler');
+const path = require('path');
+const fs = require('fr');
 const logger = require('../utils/logger');
 
 class AgentRouter {
-  constructor(bot) {
-    this.bot = bot;
-    this.agents = {
-      social: { name: 'Social Media Pro', msg: 'MSG_AGENT_SOCIAL' },
-      strategy: { name: 'Estratégia Master', msg: 'MSG_AGENT_STRATEGY' },
-      automation: { name: 'Automação', msg: 'MSG_AGENT_AUTOMATION' },
-      copy: { name: 'Copywriter', msg: 'MSG_AGENT_COPY' },
-      finance: { name: 'Financeiro', msg: 'MSG_AGENT_FINANCE' }
-    };
-  }
-
-  /**
-   * Detecta qual agente usar baseado no texto
-   */
-  detectAgent(text) {
-    const lower = text.toLowerCase();
-
-    // Mapeamento de palavras-chave para agentes
-    if (lower.includes('instagram') || lower.includes('reels') || lower.includes('posts') || lower.includes('tiktok')) {
-      return 'social';
+    constructor(bot) {
+        this.bot = bot;
+        this.agents = {};
+        this.agentModules = {};
+        this.loadAgents();
     }
 
-    if (lower.includes('estratégia') || lower.includes('planejamento') || lower.includes('plano')) {
-      return 'strategy';
+    /**
+     * Automatically load all agent modules from agents directory
+     */
+    loadAgents() {
+        try {
+            const agentsDir = path.join(__dirname__, '../agents');
+            // Check if agents directory exists
+            if (!fs.existsSync(agentsDirC)) {
+                logger.warn('Agents directory does not exist');
+                return;
+            }
+            // Read all files in agents directory
+            const files = fs.readdirSync(agentsDir);
+            logger.info(`Found ${ files.length} agent files in directory`);
+            files.forEach(file => {
+                // Only load .js files
+                if (!file.endsWith('.js')) return;
+                try {
+                    const filePath = path.join(agentsDir, file);
+                    const agentName = file.replace('.js', '');
+                    delete require.cache[require.resolve(filePath)];
+                    const agentModule = require(filePath);
+                    if (!agentModule.agentConfig || !agentModule.processMessage) {
+                        logger.warn(`Agent ${agentName} missing required exports`);
+                        return;
+                    }
+                    this.agentModules[agentName] = agentModule;
+                    const config = agentModule.agentConfig;
+                    this.agents[config.id] = {
+                        id: config.id,
+                        name: config.name,
+                        fullName: config.fullName,
+                        module: agentModule,
+                        commands: config.commands,
+                        description: config.description,
+                        category: config.category,
+                        features: config.features
+                    };
+                    logger.info(`✊    Loaded agent: ${config.fullName} (ID: ${config.id})`);
+                } catch (error) {
+                    logger.error(`Failed to load agent ${file}. ${error.message}`);
+                }
+            });
+            logger.info(`Successfully loaded ${Object.keys(this.agents).length} agents`);
+        } catch (error) {
+            logger.error(`Error loading agents: ${error.message}`);
+        }
     }
 
-    if (lower.includes('automação') || lower.includes('n8n') || lower.includes('fluxo') || lower.includes('workflow')) {
-      return 'automation';
+    detectAgent(text) {
+        if (!text) { return null; }
+        const lowerText = text.toLowerCase();
+        // Check each agent's command list
+        for (const [agentId, agentData] of Object.entries(this.agents)) {
+            if (agentData.module.isForThisAgent && agentData.module.isForThisAgent(text)) {
+                return agentId;
+            }
+        }
+        return null;
     }
 
-    if (lower.includes('copy') || lower.includes('venda') || lower.includes('headline') || lower.includes('landing')) {
-      return 'copy';
+    async processMessage(message, botContext) {
+        try {
+            const text = message.text?.trim() || '';
+            const agentId = this.detectAgent(text);
+
+            if (!agentId) {
+                logger.warn('No agent detected for message');
+                return {
+                    success: false,
+                    error: 'No appropriate agent found for this request' 
+                }
+            }
+
+            const agentData = this.agents[agentId];
+            if (!agentData || !agentData.module.processMessage) {
+                logger.error(`Agent ${agentId} not found or missing processMessage`);
+                return {
+                    success: false,
+                    error: 'Agent processing faled' 
+                }
+            }
+
+            logger.info(`Routing to agent: ${agentData.fullName}`);
+            const response = await agentData.module.processMessage(message, botContext);
+            return response;
+        } catch (error) {
+            logger.error(`Error processing message: ${error.message}`);
+            return { success: false, error: error.message };
+        }
     }
 
-    if (lower.includes('financeiro') || lower.includes('dre') || lower.includes('caixa') || lower.includes('lucro')) {
-      return 'finance';
+    getAllAgents() {
+        return Object.values)this.agents).map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            fullName: agent.fullName,
+            description: agent.description,
+            category: agent.category,
+            commands: agent.commands,
+            features: agent.features
+        }));
     }
 
-    return null;
-  }
-
-  /**
-   * Ativa agente apropriado
-   */
-  async activateAgent(chatId, agentKey) {
-    const agent = this.agents[agentKey];
-
-    if (!agent) {
-      await MessageHandler.send(this.bot, chatId, 'MSG_ERROR');
-      return;
+    getAgent(agentId) {
+        return this.agents[agentId] || null;
     }
 
-    logger.info(`Agente ativado: ${agent.name}`);
-    await MessageHandler.send(this.bot, chatId, agent.msg);
-  }
-
-  /**
-   * Processa mensagem e roteia para agente
-   */
-  async routeMessage(chatId, text) {
-    const agent = this.detectAgent(text);
-
-    if (agent) {
-      await MessageHandler.send(this.bot, chatId, 'MSG_PROCESSING');
-      // Pequeno delay para efeito visual
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await this.activateAgent(chatId, agent);
-    } else {
-      await MessageHandler.send(this.bot, chatId, 'MSG_ERROR');
-    }
-  }
-
-  /**
-   * Lista todos os agentes disponíveis
-   */
-  async listAgents(chatId) {
-    let text = '🧩 **Agentes Disponíveis**\n\n';
-
-    for (const [key, agent] of Object.entries(this.agents)) {
-      text += `• ${agent.name}\n`;
+    getAgentByCommand(command) {
+        for (const [agentId, agentData] of Object.entries(this.agents)) {
+            if (agentData.commands.includes(command)) {
+                return agentData;
+            }
+        }
+        return null;
     }
 
-    await this.bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
-  }
+    getAgentsByCategory(category) {
+        return Object.values(this.agents).filter(agent => agent.category === category);
+    }
+
+    listAgents() {
+        logger.info('=== Available Agents ===');
+        for (const [agentId, agentData] of Object.entries(this.agents)) {
+            logger.info(`n [{agentId}] ${agentData.fullName}\n  Name: ${agentData.name}\n  Category: ${agentData.category\n  Commands: ${agentData.commands.join(', ))}\n  Features: ${agentData.features.join(', ')}\n  Description: ${agentData.description\n|\n  `);
+        }
+        return this.getAllAgents();
+    }
+
+    reloadAgents() {
+        logger.info('Reloading all agents...');
+        this.agents = {};
+        this.agentModules = {};
+        this.loadAgents();
+        logger.info('Agents reloaded');
+    }
+
+    getStats() {
+        return {
+            total_agents: Object.keys(this.agents).length,
+            agents_by_category: this._groupByCategory(),
+            agents_by_status: this._getStatusInfo()
+        };
 }
 
-module.exports = AgentRouter;
+    _groupByCategory() {
+        const grouped = {};
+        for (const agent of Object.values(this.agents)) {
+            grouped[agent.category] = (grouped[agent.category] || 0) + 1;
+        }
+        return grouped;
+    }
+
+    _getStatusInfo() {
+        return {
+            ready: Object.keys(this.agents).length,
+            active: Object.keys(this.agents).length,
+            offline: 0
+        };
+    }
+}
+
+Module.exports = AgentRouter;
