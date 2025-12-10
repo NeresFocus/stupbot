@@ -2,33 +2,39 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const TelegramBot = require('node-telegram-bot-api');
+const MessageHandler = require('./src/utils/messageHandler');
+const AgentRouter = require('./src/modules/agentRouter');
 const logger = require('./src/utils/logger');
-const sheets = require('./src/integrations/sheets');
-const templates = require('./src/config/templates.json');
 
 const TOKEN = process.env.TELEGRAM_TOKEN;
 const USE_WEBHOOK = process.env.USE_WEBHOOK === 'true';
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const PORT = process.env.PORT || 3000;
 
-console.log('🚀 Iniciando Neres Focus Bot v2.1...');
+console.log('🚀 Iniciando Neres Focus Bot...');
+console.log('Modo:', USE_WEBHOOK ? 'WEBHOOK' : 'POLLING');
 
+// Express
 const app = express();
 app.use(bodyParser.json());
 
+// Bot
 let bot;
 if (USE_WEBHOOK) {
   bot = new TelegramBot(TOKEN);
   bot.setWebHook(`${WEBHOOK_URL}/webhook`)
-    .then(() => console.log('✅ Webhook configurado'))
-    .catch(err => console.error('❌ Erro webhook:', err));
+    .then(() => logger.success('Webhook configurado'))
+    .catch(err => logger.error('Erro webhook:', err));
 } else {
   bot = new TelegramBot(TOKEN, { polling: true });
-  console.log('✅ Polling iniciado');
+  logger.success('Polling iniciado');
 }
 
+// Inicializa roteador de agentes
+const agentRouter = new AgentRouter(bot);
+
 // ========================================
-// MÓDULOS PRINCIPAIS
+// PAINEL - 8 MÓDULOS
 // ========================================
 
 const MODULES = [
@@ -42,162 +48,88 @@ const MODULES = [
   { id: 'ia', name: '🧠 IA & Insights', number: 8 }
 ];
 
-// ========================================
-// SESSÕES DE USUÁRIO (Para wizard)
-// ========================================
-
-const userSessions = new Map();
-
 function buildPanelKeyboard() {
   const buttons = [];
+
   for (let i = 0; i < MODULES.length; i += 2) {
     const row = [];
     row.push({
       text: MODULES[i].name,
       callback_data: `mod_${MODULES[i].id}`
     });
+
     if (i + 1 < MODULES.length) {
       row.push({
         text: MODULES[i + 1].name,
         callback_data: `mod_${MODULES[i + 1].id}`
       });
     }
+
     buttons.push(row);
   }
+
   return { inline_keyboard: buttons };
 }
 
 // ========================================
-// COMANDOS PRINCIPAIS
+// COMANDOS
 // ========================================
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
-  await bot.sendMessage(chatId, 
-    '👋 *Bem-vindo ao Neres Focus Bot v2.1!*\n\n' +
-    'Use /painel para acessar o painel interno.\n' +
-    'Use /criar_planilha para criar uma planilha automatizada.\n' +
-    'Use /ajuda para ver todos os comandos.',
-    { parse_mode: 'Markdown' }
-  );
+  const msgConfig = MessageHandler.get('MSG_START');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
+});
+
+bot.onText(/\/menu/, async (msg) => {
+  const chatId = msg.chat.id;
+  const msgConfig = MessageHandler.get('MSG_MENU');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
 });
 
 bot.onText(/\/painel/, async (msg) => {
   const chatId = msg.chat.id;
-
-  let message = '📊 *PAINEL CENTRAL — NERES FOCUS*\n\n';
-  message += 'Escolha um módulo:\n\n';
-
-  MODULES.forEach(m => {
-    message += `${m.number}️⃣ ${m.name}\n`;
-  });
-
-  message += '\n_Clique em um módulo abaixo_';
-
-  await bot.sendMessage(chatId, message, {
-    parse_mode: 'Markdown',
+  const msgConfig = MessageHandler.get('MSG_PANEL');
+  await bot.sendMessage(chatId, msgConfig.text, {
+    parse_mode: msgConfig.parse_mode,
     reply_markup: buildPanelKeyboard()
   });
 });
 
-// ========================================
-// NOVOS COMANDOS - PLANILHAS
-// ========================================
-
-bot.onText(/\/criar_planilha/, async (msg) => {
+bot.onText(/\/ideas/, async (msg) => {
   const chatId = msg.chat.id;
-
-  userSessions.set(chatId, {
-    state: 'choosing_template',
-    data: {}
-  });
-
-  const keyboard = {
-    inline_keyboard: [
-      [
-        { text: '📋 Leads', callback_data: 'template_leads' },
-        { text: '📁 Projetos', callback_data: 'template_projetos' }
-      ],
-      [
-        { text: '💰 Financeiro', callback_data: 'template_financeiro' }
-      ]
-    ]
-  };
-
-  await bot.sendMessage(chatId,
-    '📊 *Criar Nova Planilha*\n\n' +
-    'Escolha um template:\n\n' +
-    '📋 Leads - Para gerenciar leads\n' +
-    '📁 Projetos - Para acompanhar projetos\n' +
-    '💰 Financeiro - Para controlar financeiro',
-    { parse_mode: 'Markdown', reply_markup: keyboard }
-  );
+  const msgConfig = MessageHandler.get('MSG_IDEAS');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
 });
 
-bot.onText(/\/add_linha/, async (msg) => {
+bot.onText(/\/enable_suggestions/, async (msg) => {
   const chatId = msg.chat.id;
-  const session = userSessions.get(chatId);
-
-  if (!session || !session.data.sheetId) {
-    await bot.sendMessage(chatId, 
-      '❌ Nenhuma planilha ativa.\n' +
-      'Use /criar_planilha primeiro.'
-    );
-    return;
-  }
-
-  userSessions.set(chatId, {
-    ...session,
-    state: 'awaiting_data'
-  });
-
-  await bot.sendMessage(chatId,
-    '📝 *Adicionar Linha*\n\n' +
-    'Envie os dados no formato:\n\n' +
-    'João, joao@email.com, 11999999999, Site, Novo, 5000\n\n' +
-    '_Não esqueça de separar com vírgulas!_',
-    { parse_mode: 'Markdown' }
-  );
+  const msgConfig = MessageHandler.get('MSG_SUGGESTIONS_ON');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
 });
 
-bot.onText(/\/buscar/, async (msg) => {
+bot.onText(/\/disable_suggestions/, async (msg) => {
   const chatId = msg.chat.id;
-  const session = userSessions.get(chatId);
-
-  if (!session || !session.data.sheetId) {
-    await bot.sendMessage(chatId,
-      '❌ Nenhuma planilha ativa.\n' +
-      'Use /criar_planilha primeiro.'
-    );
-    return;
-  }
-
-  userSessions.set(chatId, {
-    ...session,
-    state: 'awaiting_search'
-  });
-
-  await bot.sendMessage(chatId,
-    '🔍 *Buscar Dados*\n\n' +
-    'Digite o termo que deseja buscar:',
-    { parse_mode: 'Markdown' }
-  );
+  const msgConfig = MessageHandler.get('MSG_SUGGESTIONS_OFF');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
 });
 
-bot.onText(/\/ajuda/, async (msg) => {
+bot.onText(/\/settings/, async (msg) => {
   const chatId = msg.chat.id;
-  await bot.sendMessage(chatId,
-    '🆘 *Comandos Disponíveis*\n\n' +
-    '*Painel:*\n' +
-    '/painel - Abre painel com 8 módulos\n\n' +
-    '*Planilhas:*\n' +
-    '/criar_planilha - Criar nova planilha\n' +
-    '/add_linha - Adicionar dados\n' +
-    '/buscar - Consultar dados\n\n' +
-    '*Outros:*\n' +
-    '/ajuda - Esta mensagem',
-    { parse_mode: 'Markdown' }
-  );
+  const msgConfig = MessageHandler.get('MSG_SETTINGS');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
+});
+
+bot.onText(/\/ajuda|^\/help/, async (msg) => {
+  const chatId = msg.chat.id;
+  const msgConfig = MessageHandler.get('MSG_HELP');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
+});
+
+bot.onText(/\/reset/, async (msg) => {
+  const chatId = msg.chat.id;
+  const msgConfig = MessageHandler.get('MSG_RESET');
+  await bot.sendMessage(chatId, msgConfig.text, { parse_mode: msgConfig.parse_mode });
 });
 
 // ========================================
@@ -210,126 +142,31 @@ bot.on('callback_query', async (query) => {
 
   await bot.answerCallbackQuery(query.id);
 
-  // Módulos do painel
   if (data.startsWith('mod_')) {
     const moduleId = data.replace('mod_', '');
     const module = MODULES.find(m => m.id === moduleId);
 
     if (module) {
-      await bot.sendMessage(chatId,
-        `${module.name}\n\n` +
-        '⚙️ *Módulo em desenvolvimento*\n\n' +
-        'Em breve todas as funcionalidades estarão disponíveis!',
-        { parse_mode: 'Markdown' }
-      );
+      const msg = `${module.name}\n\n⚙️ *Módulo em desenvolvimento*\n\nEm breve todas as funcionalidades estarão disponíveis!`;
+      await bot.sendMessage(chatId, msg, { parse_mode: 'Markdown' });
     }
-  }
-
-  // Templates de planilha
-  if (data.startsWith('template_')) {
-    const templateType = data.replace('template_', '');
-    const session = userSessions.get(chatId);
-
-    if (!session) return;
-
-    session.data.templateType = templateType;
-    session.state = 'awaiting_name';
-
-    await bot.sendMessage(chatId,
-      `✅ Template: *${templates[templateType].name}*\n\n` +
-      'Digite o nome da planilha:',
-      { parse_mode: 'Markdown' }
-    );
   }
 });
 
 // ========================================
-// MENSAGENS DE TEXTO
+// MENSAGENS LIVRES (Roteamento de Agentes)
 // ========================================
 
 bot.on('message', async (msg) => {
   if (!msg.text || msg.text.startsWith('/')) return;
 
   const chatId = msg.chat.id;
-  const session = userSessions.get(chatId);
+  const text = msg.text;
 
-  if (!session) return;
+  logger.info(`Mensagem de ${chatId}: ${text}`);
 
-  try {
-    // Wizard - Aguardando nome da planilha
-    if (session.state === 'awaiting_name') {
-      const templateType = session.data.templateType;
-      const template = templates[templateType];
-
-      await bot.sendMessage(chatId, '⏳ Criando planilha...');
-
-      const result = await sheets.createSpreadsheet(msg.text, template);
-
-      session.data.sheetId = result.id;
-      session.data.sheetName = template.name;
-      session.state = 'idle';
-
-      await bot.sendMessage(chatId,
-        `✅ *Planilha Criada!*\n\n` +
-        `📊 Nome: ${result.name}\n` +
-        `🔗 [Abrir Planilha](${result.url})\n\n` +
-        `Próximos passos:\n` +
-        `• Use /add_linha para adicionar dados\n` +
-        `• Use /buscar para consultar\n` +
-        `• Use /painel para voltar`,
-        { parse_mode: 'Markdown' }
-      );
-
-      logger.info(`Planilha criada: ${result.id} para ${chatId}`);
-    }
-
-    // Wizard - Aguardando dados
-    if (session.state === 'awaiting_data') {
-      const data = msg.text.split(',').map(s => s.trim());
-
-      try {
-        await sheets.addRow(
-          session.data.sheetId,
-          session.data.sheetName.split(' - ')[0],
-          { data }
-        );
-
-        await bot.sendMessage(chatId, '✅ Dados adicionados com sucesso!');
-        session.state = 'idle';
-      } catch (err) {
-        await bot.sendMessage(chatId, '❌ Erro ao adicionar dados. Verifique o formato.');
-      }
-    }
-
-    // Wizard - Aguardando busca
-    if (session.state === 'awaiting_search') {
-      try {
-        const results = await sheets.searchData(
-          session.data.sheetId,
-          session.data.sheetName.split(' - ')[0],
-          msg.text,
-          'Nome'
-        );
-
-        if (results.length === 0) {
-          await bot.sendMessage(chatId, '❌ Nenhum resultado encontrado.');
-        } else {
-          let response = `🔍 *${results.length} Resultado(s):*\n\n`;
-          results.slice(0, 5).forEach((r, i) => {
-            response += `${i + 1}. ${JSON.stringify(r).substring(0, 50)}...\n`;
-          });
-          await bot.sendMessage(chatId, response, { parse_mode: 'Markdown' });
-        }
-        session.state = 'idle';
-      } catch (err) {
-        await bot.sendMessage(chatId, '❌ Erro na busca.');
-      }
-    }
-
-  } catch (err) {
-    console.error('Erro:', err);
-    await bot.sendMessage(chatId, '❌ Erro ao processar comando.');
-  }
+  // Roteia para agente apropriado
+  await agentRouter.routeMessage(chatId, text);
 });
 
 // ========================================
@@ -339,9 +176,12 @@ bot.on('message', async (msg) => {
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    bot: 'Neres Focus Bot v2.1',
-    features: ['Painel 8 módulos', 'Google Sheets integrado', 'Automação'],
-    uptime: process.uptime()
+    bot: 'Neres Focus Bot',
+    version: '2.0',
+    uptime: process.uptime(),
+    messages: 18,
+    agents: 5,
+    modules: 8
   });
 });
 
@@ -359,7 +199,7 @@ if (USE_WEBHOOK) {
       bot.processUpdate(req.body);
       res.sendStatus(200);
     } catch (err) {
-      console.error('Erro webhook:', err);
+      logger.error('Erro webhook:', err);
       res.sendStatus(500);
     }
   });
@@ -373,34 +213,37 @@ app.post('/deploy-hook', async (req, res) => {
     }
 
     const payload = req.body;
-    console.log('Deploy recebido:', payload);
+    logger.info('Deploy recebido:', payload);
 
     if (payload.event === 'webapp_deployed' && process.env.ADMIN_CHAT_ID) {
-      await bot.sendMessage(
-        process.env.ADMIN_CHAT_ID,
-        `🚀 *Deploy Concluído!*\n\n📦 ${payload.repo}\n🌐 ${payload.url}`,
-        { parse_mode: 'Markdown' }
-      );
+      const msg = `🚀 *Deploy Concluído!*\n\n📦 ${payload.repo}\n🌐 ${payload.url}`;
+      await bot.sendMessage(process.env.ADMIN_CHAT_ID, msg, { parse_mode: 'Markdown' });
     }
 
     res.json({ ok: true });
   } catch (err) {
-    console.error('Deploy hook error:', err);
+    logger.error('Deploy hook error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// ========================================
+// START SERVER
+// ========================================
+
 app.listen(PORT, () => {
-  console.log('✅ Servidor rodando na porta', PORT);
-  console.log('🤖 Bot: ' + (USE_WEBHOOK ? 'Webhook mode' : 'Polling mode'));
-  console.log('📊 Painel: 8 módulos + Google Sheets');
-  console.log('\n🎉 Neres Focus Bot v2.1 PRONTO!\n');
+  logger.success(`✅ Servidor rodando na porta ${PORT}`);
+  logger.info(`🤖 Bot: ${USE_WEBHOOK ? 'Webhook mode' : 'Polling mode'}`);
+  logger.info('📊 Painel: 8 módulos ativos');
+  logger.info('🧠 Agentes: 5 inteligentes');
+  logger.info('📝 Mensagens: 18 customizadas');
 });
 
+// Tratamento de erros
 process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled rejection:', err);
+  logger.error('❌ Unhandled rejection:', err);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught exception:', err);
+  logger.error('❌ Uncaught exception:', err);
 });
