@@ -1,0 +1,26 @@
+{
+  "leads": {
+    "name": "📋 Leads e Vendas",
+    "headers": ["Data", "Nome", "Email", "Telefone", "Origem", "Status", "Valor"],
+    "dropdowns": {
+      "Status": ["Novo", "Contato", "Qualificado", "Proposta", "Fechado"],
+      "Origem": ["Site", "Instagram", "WhatsApp", "Indicação", "Outro"]
+    }
+  },
+  "projetos": {
+    "name": "📁 Projetos e Entregas",
+    "headers": ["ID", "Nome Projeto", "Cliente", "Data Início", "Prazo", "Status", "%"],
+    "dropdowns": {
+      "Status": ["Planejamento", "Em Andamento", "Revisão", "Concluído", "Pausado"]
+    }
+  },
+  "financeiro": {
+    "name": "💰 Financeiro",
+    "headers": ["Data", "Tipo", "Categoria", "Descrição", "Valor", "Método", "Status"],
+    "dropdowns": {
+      "Tipo": ["Entrada", "Saída"],
+      "Método": ["PIX", "Cartão", "Boleto", "Transferência"],
+      "Status": ["Pendente", "Pago", "Cancelado"]
+    }
+  }
+}
