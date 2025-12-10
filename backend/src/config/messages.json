@@ -1,0 +1,74 @@
+{
+  "MSG_START": {
+    "text": "👋 Olá! Bem-vindo ao **Neres Focus Bot** 🚀\nSou seu assistente inteligente para conteúdos, estratégias, automações e operações.\n\nEscolha uma opção para começar:\n\n📍 **1) Abrir Painel Completo**\n📍 **2) Ativar Sugestões Inteligentes**\n📍 **3) Criar Algo Agora**\n📍 **4) Configurações**\n\nOu simplesmente envie uma mensagem dizendo o que você precisa.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_MENU": {
+    "text": "📍 **PAINEL PRINCIPAL – Neres Focus Bot**\n\nO que deseja fazer agora?\n\n1️⃣ Abrir Painel Completo\n2️⃣ Criar Conteúdo / Estratégia\n3️⃣ Ativar Sugestões Inteligentes\n4️⃣ Diagnóstico do Negócio\n5️⃣ Fluxos Automáticos\n6️⃣ Agentes Internos\n7️⃣ Configurações\n8️⃣ Ajuda\n\n🔁 Envie o número ou use os botões abaixo.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_PANEL": {
+    "text": "🧭 **Painel Completo – Neres Focus Bot**\n\nAqui estão todas as ferramentas disponíveis:\n\n📌 **Criação & Conteúdo**\n- Ideias Rápidas\n- Cronogramas\n- Posts, Reels, Scripts\n- Copywriting Avançado\n\n📊 **Análises & Estratégias**\n- Diagnóstico do Negócio\n- Estratégia Completa 360º\n- Funil de Vendas\n- Plano de Marketing\n\n⚙️ **Automações**\n- Gerar Fluxo n8n\n- Rotas de Agentes\n- Mapeamento Operacional\n\n🧩 **Agentes Internos**\n- Social Media Pro\n- Estratégia Master\n- IA Operacional\n- Copywriter Premium\n- Financeiro Expert\n\n🛠️ **Configurações**\n- Idioma\n- Níveis de Sugestões\n- Integrações (Sheets, Notion, Drive)",
+    "parse_mode": "Markdown"
+  },
+  "MSG_SUGGESTIONS_ON": {
+    "text": "✨ **Sugestões Inteligentes ativadas com sucesso!**\n\nAgora:\n- O bot recomenda conteúdos automaticamente\n- Analisa suas mensagens em tempo real\n- Sugere oportunidades e melhorias\n- Ativa gatilhos inteligentes por contexto\n\nEnvie qualquer assunto para começar.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_SUGGESTIONS_OFF": {
+    "text": "⚠️ Sugestões Inteligentes desativadas.\n\nVocê pode ativá-las a qualquer momento enviando:\n`/enable_suggestions`",
+    "parse_mode": "Markdown"
+  },
+  "MSG_SETTINGS": {
+    "text": "⚙️ **Configurações Gerais**\n\nAjuste o bot do seu jeito:\n\n🌐 Idioma\n🧠 Nível de Inteligência\n🔥 Intensidade das Sugestões\n🔗 Integrações (Google • Sheets • Notion)\n📣 Notificações\n🔒 Segurança\n🧼 Reset de Preferências\n\nEscolha uma opção.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_HELP": {
+    "text": "📘 **Central de Ajuda – Neres Focus Bot**\n\nComandos principais:\n- /start – Reiniciar sessão\n- /menu – Abrir menu principal\n- /panel – Painel Completo\n- /ideas – Ideias rápidas\n- /enable_suggestions – Ativar sugestões\n- /reset – Resetar configurações\n\nSe precisar de algo personalizado, basta pedir.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_ERROR": {
+    "text": "❌ Não entendi sua mensagem.\n\nTente reformular ou escolha uma opção:\n/menu | /panel | /help",
+    "parse_mode": "Markdown"
+  },
+  "MSG_RESET": {
+    "text": "🔄 **Configurações redefinidas com sucesso!**\n\nTudo voltou ao padrão inicial.\nDigite /start para recomeçar.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_IDEAS": {
+    "text": "💡 **Gerador Instantâneo de Ideias**\n\nMe diga seu tema e eu criarei:\n- 5 ideias rápidas\n- 10 títulos prontos\n- 3 posts completos\n- 1 roteiro de Reels\n\nExemplo: \"ideias sobre vendas para pequenos negócios\"",
+    "parse_mode": "Markdown"
+  },
+  "MSG_PROCESSING": {
+    "text": "⏳ Processando sua solicitação...",
+    "parse_mode": "Markdown"
+  },
+  "MSG_AGENT_SOCIAL": {
+    "text": "📲 **Agente Social Media Pro Ativado**\n\nPronto para gerar:\n- Posts\n- Reels\n- Análises\n- Calendário\n- Estratégias de crescimento\n\nEnvie o tema.",
+    "parse_mode": "Markdown"
+  },
+  "MSG_AGENT_STRATEGY": {
+    "text": "🎯 **Agente Estratégia Master Ativado**\n\nVou criar:\n- Planos 360º\n- Funil completo\n- Diagnóstico\n- Estratégia de conteúdo\n- Plano de ação\n\nQual é o foco do seu negócio?",
+    "parse_mode": "Markdown"
+  },
+  "MSG_AGENT_AUTOMATION": {
+    "text": "⚙️ **Agente de Automação / Operações Ativado**\n\nPosso gerar:\n- Fluxos n8n\n- Arquiteturas\n- Rotas\n- Processos Lean\n- Modelos de operação\n\nQual automação deseja criar?",
+    "parse_mode": "Markdown"
+  },
+  "MSG_AGENT_COPY": {
+    "text": "✍️ **Agente Copywriter Premium Ativado**\n\nGero:\n- Copy persuasiva\n- Vendas\n- Landing pages\n- Scripts de vídeo\n- Headlines\n\nQual o produto ou objetivo?",
+    "parse_mode": "Markdown"
+  },
+  "MSG_AGENT_FINANCE": {
+    "text": "💰 **Agente Financeiro Expert Ativado**\n\nPosso criar:\n- Planos financeiros\n- Projeções\n- DRE\n- Indicadores\n- Estratégias de caixa\n\nSobre qual área financeira deseja tratar?",
+    "parse_mode": "Markdown"
+  },
+  "MSG_TASK_DONE": {
+    "text": "✔️ Ação concluída com sucesso!",
+    "parse_mode": "Markdown"
+  },
+  "MSG_END": {
+    "text": "Pronto!\nSe quiser continuar, envie um novo comando ou acesse /menu.",
+    "parse_mode": "Markdown"
+  }
+}
